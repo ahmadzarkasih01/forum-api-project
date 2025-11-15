@@ -51,9 +51,4 @@ describe("HTTP server", () => {
       expect(responseJson.value).toEqual("Hello world!");
     });
   });
-
-  it("should intentionally fail for CI test", () => {
-    // Test ini sengaja dibuat salah
-    expect(1 + 1).toBe(3); // ❌ salah → pasti gagal
-  });
 });
