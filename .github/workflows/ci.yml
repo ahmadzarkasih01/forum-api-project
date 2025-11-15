@@ -5,6 +5,12 @@ on:
     branches:
       - main
 
+
+on:
+  pull_request:
+    branches:
+      - main
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -12,15 +18,14 @@ jobs:
     strategy:
       matrix:
         node-version: ['18.x', '20.x']
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     services:
       postgres:
         image: postgres
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: mysecretpassword
-          POSTGRES_DB: forumapi_test
+          POSTGRES_USER: ${{ secrets.PGUSER }}
+          POSTGRES_PASSWORD: ${{ secrets.PGPASSWORD }}
+          POSTGRES_DB: ${{ vars.PGDATABASE }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -30,27 +35,33 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: npm install migrate and test
+      - name: Install, migrate, and test
         run: |
           npm install
           npm run migrate up
           npm run test
         env:
           CI: true
+
+          # App config
           HOST: localhost
           PORT: 3000
+
+          # Database config
           PGHOST: localhost
           PGPORT: 5432
-          PGUSER: postgres
-          PGPASSWORD: mysecretpassword
-          PGDATABASE: forumapi_test
-          ACCESS_TOKEN_KEY: secret
-          REFRESH_TOKEN_KEY: terces
-          ACCESS_TOKEN_AGE: 3600
+          POSTGRES_USER: ${{ secrets.PGUSER }}
+          POSTGRES_PASSWORD: ${{ secrets.PGPASSWORD }}
+          POSTGRES_DB: ${{ vars.PGDATABASE }}
+
+          # Token keys
+          ACCESS_TOKEN_KEY: ${{ secrets.ACCESS_TOKEN_KEY }}
+          REFRESH_TOKEN_KEY: ${{ secrets.REFRESH_TOKEN_KEY }}
+          ACCESS_TOKEN_AGE: ${{ vars.ACCESS_TOKEN_AGE }}
