@@ -1,5 +1,7 @@
 const Hapi = require("@hapi/hapi");
 const Jwt = require("@hapi/jwt");
+const RateLimitPlugin = require('./plugins/RateLimitPlugin');
+
 
 const ClientError = require("../../Commons/exceptions/ClientError");
 const DomainErrorTranslator = require("../../Commons/exceptions/DomainErrorTranslator");
@@ -17,6 +19,9 @@ const createServer = async (container) => {
   });
 
   await server.register([
+    {
+      plugin: RateLimitPlugin
+    },
     {
       plugin: Jwt,
     },
@@ -56,6 +61,14 @@ const createServer = async (container) => {
       options: { container },
     },
   ]);
+
+  server.route({
+    method: 'GET',
+    path: '/',
+    handler: () => ({
+      value: 'Hello world!',
+    }),
+  });
 
   server.ext("onPreResponse", (request, h) => {
     // mendapatkan konteks response dari request
